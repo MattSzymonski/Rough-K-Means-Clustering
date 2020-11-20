@@ -23,13 +23,13 @@ data.type[[3]] <- db.Crescents
 
 # --- Prepare data
 data.specifier <- length(data.type)
-for (d in 3) {
+for (d in data.specifier) {
 
   data <- data.type[[d]]
-  cluster.number <- 3
+  cluster.number <- 2
 
   # --- Calculate clusters
-  result = RoughKMeans(data=data, cluster.number = cluster.number, epsilon = 2.0, weight.lower = 0.9, iteration.limit = 55)
+  result = RoughKMeans(data = data, cluster.number = cluster.number, epsilon = 1.3, weight.lower = 0.9, iteration.limit = 50)
   
   # --- Plot
   x <- data$x
@@ -56,11 +56,16 @@ for (d in 3) {
     }
   }
   
+  length(data[,1])
+  length(lowerApprox.pure.data[,1])
+  length(x)
+  
+  
   color <- as.factor(lowerApprox.clusters)
   p = p + geom_point(data=lowerApprox.pure.data, aes(x=x, y=y, color=color), pch=16)
   p = p + stat_chull(data=lowerApprox.pure.data, aes(x=x, y=y, fill=color), alpha = 0.1, geom = "polygon") 
   
-  # --- upperApprox - lowerApprox (pure upperApprox)
+  # --- upperApprox\lowerApprox (pure upperApprox)
   approx.difference.indices = which(rowSums(result$upperApprox) > 1)
   approx.difference.pure.data = data[approx.difference.indices,,drop = FALSE]
   approx.difference.pure <- result$upperApprox[approx.difference.indices,,drop = FALSE]
@@ -106,7 +111,7 @@ for (d in 3) {
 
   print(p)
   
-  ggsave(p, file=paste0("Plots/Synthesized_", d, "_clusters_", cluster.number,".png"), width = 15, height = 13, units = "cm")
+  #ggsave(p, file=paste0("Plots/Synthesized_", d, "_clusters_", cluster.number,".png"), width = 15, height = 13, units = "cm")
   
   message("Number of iterations: ", result$iterations)
 }
