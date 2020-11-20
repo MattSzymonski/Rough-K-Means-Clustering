@@ -52,22 +52,22 @@ RecalculateClusters <- function(data, cluster.number, centroids, approximation.l
     minimal.distance.index = which(distance.matrix[i,] == min(distance.matrix[i,]))
     not.minimal.distance.index = cluster.indices[-minimal.distance.index] # Remove index of minimal element
     
-    assignment.factor = distance.matrix[i, not.minimal.distance.index[1]] / distance.matrix[i, minimal.distance.index]
+    approximation.lower[i,] = rep(0, cluster.number) # zero out assignments
+    approximation.upper[i,] = rep(0, cluster.number) # zero out assignments
     
-    if (!(assignment.factor <= epsilon)) {
-      approximation.lower[i,] = rep(0, cluster.number) # zero out assignments
-      approximation.lower[i, minimal.distance.index] = 1 # assign
-      
-      approximation.upper[i,] = rep(0, cluster.number) # zero out assignments
-      approximation.upper[i, minimal.distance.index] = 1 # assign
-    }
-    else
+    for (j in 1:length(not.minimal.distance.index)) # For each possible cluster (Except closest one)
     {
-      approximation.lower[i,] = rep(0, cluster.number) # zero out assignments
-      #approximation.lower[i, minimal.distance.index] = 1 # assign
-      
-      approximation.upper[i,] = rep(0, cluster.number) # zero out assignments
-      approximation.upper[i, cluster.indices] = 1 # assign to both tested
+      assignment.factor = distance.matrix[i, not.minimal.distance.index[j]] / distance.matrix[i, minimal.distance.index]
+      if (!(assignment.factor <= epsilon)) 
+      {
+        approximation.lower[i, minimal.distance.index] = 1 # assign
+        approximation.upper[i, minimal.distance.index] = 1 # assign
+      }
+      else
+      {
+        approximation.upper[i, not.minimal.distance.index[j]] = 1 # assign to both tested
+        approximation.upper[i, minimal.distance.index] = 1 # assign to both tested
+      }
     }
   }
   
@@ -110,8 +110,6 @@ RoughKMeans <- function(data, cluster.number = 2, iteration.limit = 100, epsilon
     updated.approximations = RecalculateClusters(data, cluster.number, centroids, approximation.lower, approximation.upper, epsilon)
     approximation.lower = updated.approximations$approximation.lower
     approximation.upper = updated.approximations$approximation.upper
-    
-    approximation.upper
     
     identifier <- sum(abs(previous.approximation.upper - approximation.upper))
     counter <- counter + 1
