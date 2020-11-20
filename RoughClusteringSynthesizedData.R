@@ -23,13 +23,13 @@ data.type[[3]] <- db.Crescents
 
 # --- Prepare data
 data.specifier <- length(data.type)
-for (d in data.specifier) {
+for (d in 1:data.specifier) {
 
   data <- data.type[[d]]
   cluster.number <- 2
 
   # --- Calculate clusters
-  result = RoughKMeans(data = data, cluster.number = cluster.number, epsilon = 1.3, weight.lower = 0.9, iteration.limit = 50)
+  result = RoughKMeans(data = data, cluster.number = cluster.number, epsilon = 1.2, weight.lower = 0.8, iteration.limit = 50)
   
   # --- Plot
   x <- data$x
