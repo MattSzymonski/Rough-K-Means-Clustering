@@ -6,7 +6,6 @@ library(gridExtra)
 rm(list = ls())
 source("RoughKMeans.R")
 
-
 # --- Load data sets
 db.file.MickeyMouse = "./Data/Custom/MickeyMouse.csv"
 db.MickeyMouse <- read.csv(db.file.MickeyMouse)
@@ -22,15 +21,15 @@ data.type[[1]] <- db.MickeyMouse
 data.type[[2]] <- db.Circles
 data.type[[3]] <- db.Crescents
 
-
 # --- Prepare data
-data.specifier <- 1 #length(data.type)
-for (i in 1:data.specifier) {
-  data <- data.type[[i]]
+data.specifier <- length(data.type)
+for (d in 3) {
+
+  data <- data.type[[d]]
   cluster.number <- 3
 
   # --- Calculate clusters
-  result = RoughKMeans(data=data, cluster.number = cluster.number, epsilon = 1.5, weight.lower = 0.1, iteration.limit = 3)
+  result = RoughKMeans(data=data, cluster.number = cluster.number, epsilon = 2.0, weight.lower = 0.9, iteration.limit = 55)
   
   # --- Plot
   x <- data$x
@@ -43,51 +42,54 @@ for (i in 1:data.specifier) {
   
   # --- lowerApprox
   lowerApprox.indices = which(rowSums(result$lowerApprox) == 1)
-  lowerApprox.pure.data = data[lowerApprox.indices,]
-  lowerApprox.pure <- result$lowerApprox[lowerApprox.indices,]
+  lowerApprox.pure.data = data[lowerApprox.indices,,drop = FALSE]
+  lowerApprox.pure <- result$lowerApprox[lowerApprox.indices,,drop = FALSE]
   lowerApprox.clusters <- rep(0, length(lowerApprox.pure[,1]))
   
-  for(i in 1:length(lowerApprox.pure[,1])) {
-    for(j in 1:length(result$centers[,1])) {
-      if(lowerApprox.pure[i,j] == 1) {
-        lowerApprox.clusters[i] = j
+  if (length(lowerApprox.pure[,1]) > 0) {
+    for(i in 1:length(lowerApprox.pure[,1])) {
+      for(j in 1:length(result$centers[,1])) {
+        if(lowerApprox.pure[i,j] == 1) {
+          lowerApprox.clusters[i] = j
+        }
       }
     }
   }
   
   color <- as.factor(lowerApprox.clusters)
-  p = p + geom_point(data=lowerApprox.pure.data, aes(x=x, y=y, color=color), show.legend = T)
+  p = p + geom_point(data=lowerApprox.pure.data, aes(x=x, y=y, color=color), pch=16)
   p = p + stat_chull(data=lowerApprox.pure.data, aes(x=x, y=y, fill=color), alpha = 0.1, geom = "polygon") 
   
   # --- upperApprox - lowerApprox (pure upperApprox)
   approx.difference.indices = which(rowSums(result$upperApprox) > 1)
-  approx.difference.pure.data = data[approx.difference.indices,]
-  approx.difference.pure <- result$upperApprox[approx.difference.indices,]
+  approx.difference.pure.data = data[approx.difference.indices,,drop = FALSE]
+  approx.difference.pure <- result$upperApprox[approx.difference.indices,,drop = FALSE]
   approx.difference.clusters <- rep(0, length(approx.difference.pure[,1]))
   
-  for(i in 1:length(approx.difference.pure[,1])) {
-    type = 0
-    for(j in 1:length(result$centers[,1])) {
-      if(approx.difference.pure[i,j] == 1) {
-        type = type + j
+  if (length(approx.difference.pure[,1]) > 0) {
+    for(i in 1:length(approx.difference.pure[,1])) {
+      type = 0
+      for(j in 1:length(result$centers[,1])) {
+        if(approx.difference.pure[i,j] == 1) {
+          type = type + j
+        }
       }
+      approx.difference.clusters[i] = type
     }
-    approx.difference.clusters[i] = type
   }
 
-  #shapes <- c(21,22,23,24,56)
   color.difference <- as.factor(8)
-  shape.difference <- as.factor(approx.difference.clusters)
+  shape.difference <- as.factor(approx.difference.clusters-2)
   p = p + geom_point(data=approx.difference.pure.data, aes(x=x, y=y, pch=shape.difference), color=color.difference, size=2)
   
   # --- upperApprox 
   for(i in 1:length(result$centers[,1])) { # All in this (also shared)
     upperApprox.indices = which(result$upperApprox[,i] > 0)
-    upperApprox.pure.data = data[upperApprox.indices,]
-    upperApprox.pure <- result$upperApprox[upperApprox.indices,]
+    upperApprox.pure.data = data[upperApprox.indices,,drop = FALSE]
+    upperApprox.pure <- result$upperApprox[upperApprox.indices,,drop = FALSE]
     upperApprox.clusters <- rep(i, length(upperApprox.pure[,1]))
     
-    p = p + stat_chull(data=upperApprox.pure.data, aes(x=x, y=y), fill=i+1, color=i+1, alpha = 0.07, geom = "polygon") 
+    p = p + stat_chull(data=upperApprox.pure.data, aes(x=x, y=y), fill=i+1, color=i+1, alpha = 0.08, geom = "polygon") 
   }
   
   # --- centroids
@@ -96,15 +98,15 @@ for (i in 1:data.specifier) {
   
   # --- print
   p = p + 
-    scale_color_manual(values = c(2:100)) + 
-    scale_fill_manual(values = c(2:100)) +
-    scale_shape_manual(values = c(2:100)) +
-    labs(fill = "Clusters", color = "Clusters", pch = "Boundary Elements", title=title, y=y.label, x=x.label) + 
+    scale_color_manual(values = c(2:100), name="Lower\nApproximations") + 
+    scale_shape_manual(values = c(2:100), name="Upper\\Lower\nApproximations") +
+    scale_fill_manual(values = c(2:100), name="Clusters") +
+    labs(title=title, y=y.label, x=x.label) + 
     theme(legend.position="right")
-  
+
   print(p)
   
-  #ggsave(p, file=paste0("Plots/Synthesized_", i, "_clusters_", cluster.number,".png"), width = 15, height = 13, units = "cm")
+  ggsave(p, file=paste0("Plots/Synthesized_", d, "_clusters_", cluster.number,".png"), width = 15, height = 13, units = "cm")
   
   message("Number of iterations: ", result$iterations)
 }

@@ -46,12 +46,10 @@ RecalculateClusters <- function(data, cluster.number, centroids, approximation.l
     }
   }
   
-  
-  
   for(i in 1:data.number) {
     
     cluster.indices <- 1:cluster.number
-    minimal.distance.index = which(distance.matrix[i,] == min(distance.matrix[i,]))
+    minimal.distance.index = which(distance.matrix[i,] == min(distance.matrix[i,]))[1]
     not.minimal.distance.index = cluster.indices[-minimal.distance.index] # Remove index of minimal element
     
     approximation.lower[i,] = rep(0, cluster.number) # zero out assignments
@@ -59,17 +57,16 @@ RecalculateClusters <- function(data, cluster.number, centroids, approximation.l
     
     for (j in 1:length(not.minimal.distance.index)) # For each possible cluster (Except closest one)
     {
-      
-      
-      
-      
       assignment.factor = distance.matrix[i, not.minimal.distance.index[j]] / distance.matrix[i, minimal.distance.index]
+
       if (!(assignment.factor <= epsilon)) 
       {
-        approximation.upper[i,] = rep(0, cluster.number) # zero out assignments
-        
-        approximation.lower[i, minimal.distance.index] = 1 # assign
-        approximation.upper[i, minimal.distance.index] = 1 # assign
+        if (approximation.upper[i, minimal.distance.index] == 0) { # If is already assigned to upper of the closest one
+          approximation.upper[i,] = rep(0, cluster.number) # zero out assignments
+          
+          approximation.lower[i, minimal.distance.index] = 1 # assign
+          approximation.upper[i, minimal.distance.index] = 1 # assign
+        }
       }
       else
       {
@@ -91,6 +88,12 @@ RecalculateClusters <- function(data, cluster.number, centroids, approximation.l
 RoughKMeans <- function(data, cluster.number = 2, epsilon = 1.5, weight.lower = 0.7, iteration.limit = 100) {
   
   # --- Validate parameters
+  if (length(data[,1]) < 10) {
+    stop("Error: Invalid data. More data points required")
+  }
+  if (length(data[1,]) < 2) {
+    stop("Error: Invalid data. Two parameters per data point required (X and Y)")
+  }
   if (cluster.number < 1) {
     stop("Error: Invalid cluster.number. Must be greater than 0")
   }
@@ -103,9 +106,7 @@ RoughKMeans <- function(data, cluster.number = 2, epsilon = 1.5, weight.lower = 
   if (iteration.limit <= 0){
     stop("Error: Invalid iteration.limit. Must be greater than 0")
   }
-  
-  
-  
+
   data <- data[,c(1:2)]
   data.number = length(data[,1])
   
