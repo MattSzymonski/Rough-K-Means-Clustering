@@ -30,7 +30,7 @@ for (i in 1:data.specifier) {
   cluster.number <- 3
 
   # --- Calculate clusters
-  result = RoughKMeans(data=data, cluster.number = cluster.number, iteration.limit = 15, epsilon = 3.5, weight.lower = 0.8)
+  result = RoughKMeans(data=data, cluster.number = cluster.number, epsilon = 1.5, weight.lower = 0.1, iteration.limit = 3)
   
   # --- Plot
   x <- data$x
@@ -98,6 +98,7 @@ for (i in 1:data.specifier) {
   p = p + 
     scale_color_manual(values = c(2:100)) + 
     scale_fill_manual(values = c(2:100)) +
+    scale_shape_manual(values = c(2:100)) +
     labs(fill = "Clusters", color = "Clusters", pch = "Boundary Elements", title=title, y=y.label, x=x.label) + 
     theme(legend.position="right")
   

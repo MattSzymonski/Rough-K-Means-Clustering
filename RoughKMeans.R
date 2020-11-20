@@ -46,6 +46,8 @@ RecalculateClusters <- function(data, cluster.number, centroids, approximation.l
     }
   }
   
+  
+  
   for(i in 1:data.number) {
     
     cluster.indices <- 1:cluster.number
@@ -57,14 +59,22 @@ RecalculateClusters <- function(data, cluster.number, centroids, approximation.l
     
     for (j in 1:length(not.minimal.distance.index)) # For each possible cluster (Except closest one)
     {
+      
+      
+      
+      
       assignment.factor = distance.matrix[i, not.minimal.distance.index[j]] / distance.matrix[i, minimal.distance.index]
       if (!(assignment.factor <= epsilon)) 
       {
+        approximation.upper[i,] = rep(0, cluster.number) # zero out assignments
+        
         approximation.lower[i, minimal.distance.index] = 1 # assign
         approximation.upper[i, minimal.distance.index] = 1 # assign
       }
       else
       {
+        approximation.lower[i,] = rep(0, cluster.number) # zero out assignments
+        
         approximation.upper[i, not.minimal.distance.index[j]] = 1 # assign to both tested
         approximation.upper[i, minimal.distance.index] = 1 # assign to both tested
       }
@@ -78,7 +88,23 @@ RecalculateClusters <- function(data, cluster.number, centroids, approximation.l
 
 # ----------------------------- Algorithm ------------------------------
 
-RoughKMeans <- function(data, cluster.number = 2, iteration.limit = 100, epsilon = 1.5, weight.lower = 0.7) {
+RoughKMeans <- function(data, cluster.number = 2, epsilon = 1.5, weight.lower = 0.7, iteration.limit = 100) {
+  
+  # --- Validate parameters
+  if (cluster.number < 1) {
+    stop("Error: Invalid cluster.number. Must be greater than 0")
+  }
+  if (epsilon < 1){
+    stop("Error: Invalid epsilon. Must be greater or equal 1")
+  }
+  if (weight.lower < 0 || weight.lower > 1){
+    stop("Error: Invalid weight.lower. Must be in range [0,1]")
+  }
+  if (iteration.limit <= 0){
+    stop("Error: Invalid iteration.limit. Must be greater than 0")
+  }
+  
+  
   
   data <- data[,c(1:2)]
   data.number = length(data[,1])
@@ -99,7 +125,6 @@ RoughKMeans <- function(data, cluster.number = 2, iteration.limit = 100, epsilon
   approximation.upper = approximation.lower
   
   # --- Repeat updating centroids and recalculating clusters
-  
   
   counter <- 0
   repeat{
